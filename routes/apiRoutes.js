@@ -1,39 +1,30 @@
-const fs = require("fs");
-const path = require("path");
-const router = require("express").Router();
-const data = require("../db/db.json");
-const {v4:uuidv4} = require("uuid");
-console.log("being read");
-//module.exports = apply => {
-    router.get("/notes", function (req, res) {
-        //res.sendFile(path.join(__dirname, "../db/db.json"))
-        /*fs.readFile("../db/db.json").then((result) => {
-            console.log(result);
-            res.json(result);
-        });*/
-        //console.log("Note was retrieved.");
-        //console.log(data);
-        res.json(data);
-    });
+const fs = require("fs"); //Provides utilities for working with file systems on the computer
+const path = require("path"); //Provides utilites for working with path and directories
+const router = require("express").Router(); //Provides endpoint responses to client requests
+const data = require("../db/db.json"); //Puts the database into a constant to be utlized elsewhere
+const {v4:uuidv4} = require("uuid"); //Used to generate a unique id for each note stored
 
-    router.post("/notes", function (req, res) {
-        let newNote = req.body;
-        newNote.id = uuidv4();
-        data.push(newNote);
-        fs.writeFileSync(path.join(__dirname, "../db/db.json"), JSON.stringify(data));
-        console.log("Note was added.");
-        res.json(data);
-    });
+router.get("/notes", function (req, res) { //Request data from /notes when called uppon
+    const newInfo = JSON.parse(fs.readFileSync(path.join(__dirname, "../db/db.json"))); //Pulls the new data from the database and stores it into a constant to be utlized elsewhere
+    res.json(newInfo); //Sends a JSON response with the new database information
+});
 
-    router.delete("/notes/:id", function (req, res) {
-        let noteID = req.params.id;
-        const newInfo = data.filter(note => note.id !== noteID);
-        fs.writeFileSync(path.join(__dirname, "../db/db.json"), JSON.stringify(newInfo));
-        console.log("Note was deleted.");
-        //const result = fs.readFileSync(path.join(__dirname, "../db/db.json"), 'utf8');
-        console.log(newInfo);
-        res.json(newInfo);
-    });
-//};
+router.post("/notes", function (req, res) { //Posts data from /notes when called uppon
+    let newNote = req.body; //Stores the user input into a variable
+    newNote.id = uuidv4(); //Creates a unique id for the information the user is storing
+    data.push(newNote); //Adds the new information the user inputed into the database
+    fs.writeFileSync(path.join(__dirname, "../db/db.json"), JSON.stringify(data));
+    console.log("Note was added."); //Lets user know a note was added on the console
+    res.json(data); //Sends a JSON response with the database information
+});
 
-module.exports = router;
+router.delete("/notes/:id", function (req, res) { //Deletes data from /notes when called uppon using the unique id
+    let noteID = req.params.id; //Stores the unique id into a variable to be used later on
+    let newInfo = JSON.parse(fs.readFileSync(path.join(__dirname, "../db/db.json"))); //Reads the database and loads it into a variable
+    const newData = newInfo.filter(notes => notes.id !== noteID); //Filters through the database and finds the information pertaining the unique id passed in and stores that information into a constant variable
+    fs.writeFileSync(path.join(__dirname, "../db/db.json"), JSON.stringify(newData)); //Rewrites the database after the selected id information was taken out
+    console.log("Note was deleted."); //Lets user know a note was deleted on the console
+    res.json(newData); //Sends a JSON response with the new database information
+});
+
+module.exports = router; //Exports the module to be utilzed elsewhere
